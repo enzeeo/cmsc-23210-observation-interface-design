@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farmer Fridge</title>
+  <style>
+    /* ── CSS Reset ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Brand Variables ── */
+    :root {
+      --green-dark: #2E7D32;
+      --green-accent: #4CAF50;
+      --white: #FFFFFF;
+      --bg: #F5F5F5;
+      --text: #212121;
+      --text-muted: #757575;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    }
+
+    /* ── Base ── */
+    html,
+    body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── Page Sections ── */
+    .page {
+      display: none;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* ── White Card ── */
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--green-accent);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 14px 28px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--green-dark);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--green-dark);
+      border: 2px solid var(--green-dark);
+      border-radius: 8px;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: var(--green-dark);
+      color: var(--white);
+    }
+
+    /* ── App Layout (sidebar + main) ── */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    #sidebar {
+      width: 80px;
+      background: var(--white);
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      gap: 8px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: transform 0.2s;
+    }
+
+    .sidebar-categories {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      overflow-y: auto;
+      width: 100%;
+      padding-top: 4px;
+    }
+
+    .sidebar-exit {
+      margin-top: auto;
+      color: #c62828 !important;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 12px !important;
+      width: 100%;
+    }
+
+    .sidebar-exit:hover {
+      background: #FFEBEE !important;
+      color: #c62828 !important;
+    }
+
+    #sidebar.sidebar-hidden {
+      display: none;
+    }
+
+    .sidebar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 6px;
+      cursor: pointer;
+      width: 68px;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .sidebar-item .icon {
+      font-size: 1.4rem;
+    }
+
+    .sidebar-item:hover {
+      background: #E8F5E9;
+      color: var(--green-dark);
+    }
+
+    .sidebar-item.active {
+      background: #E8F5E9;
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .sidebar-item[disabled] {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 80px;
+      padding: 24px;
+    }
+
+    /* pages that use the sidebar layout */
+    #page-categories,
+    #page-options,
+    #page-item-detail {
+      flex-direction: row;
+    }
+
+    /* ── Responsive: Desktop ≥ 1920px ── */
+    @media (min-width: 1920px) {
+      #sidebar {
+        width: 120px;
+      }
+
+      .sidebar-item {
+        width: 100px;
+        font-size: 0.75rem;
+      }
+
+      .main-content {
+        margin-left: 120px;
+        padding: 40px;
+      }
+    }
+
+    /* ── Start Page ── */
+    #page-start {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      padding: 24px 16px;
+      gap: 16px;
+    }
+
+    .start-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .start-hero {
+      background: var(--green-dark);
+      color: var(--white);
+      border-radius: 20px;
+      padding: 32px 48px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .start-hero .brand-name {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .start-hero .brand-tagline {
+      font-size: 1rem;
+      opacity: 0.85;
+      margin-top: 6px;
+    }
+
+    .start-hero .brand-leaf {
+      font-size: 2.8rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .pay-badges {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .pay-badge {
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pay-badge.apple {
+      background: #1a1a1a;
+    }
+
+    .pay-badge.google {
+      background: #fff;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+    }
+
+    /* Fake QR code */
+    .qr-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .qr-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .qr-code {
+      display: grid;
+      grid-template-columns: repeat(7, 10px);
+      grid-template-rows: repeat(7, 10px);
+      gap: 2px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+    }
+
+    .qr-cell {
+      width: 10px;
+      height: 10px;
+      border-radius: 1px;
+    }
+
+    .qr-cell.on {
+      background: var(--green-dark);
+    }
+
+    .qr-cell.off {
+      background: #fff;
+    }
+
+    .start-banner {
+      background: #FFF8E1;
+      border-left: 4px solid #FFC107;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      color: #5D4037;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .start-banner.card-only {
+      background: #E3F2FD;
+      border-left-color: #1976D2;
+      color: #0D47A1;
+    }
+
+    .start-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .btn-start {
+      background: var(--green-accent);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      padding: 18px 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-start:hover {
+      background: var(--green-dark);
+      transform: scale(1.02);
+    }
+
+    .btn-rewards {
+      background: transparent;
+      color: var(--green-dark);
+      border: 2px solid var(--green-dark);
+      border-radius: 50px;
+      padding: 14px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-rewards:hover {
+      background: var(--green-dark);
+      color: var(--white);
+    }
+
+    /* ── Easter Egg Page ── */
+    #page-easter-egg {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+      gap: 24px;
+      padding: 32px 16px;
+      text-align: center;
+    }
+
+    .egg-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+
+    .egg-subtitle {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .egg-emojis {
+      display: flex;
+      gap: 16px;
+      font-size: 2.8rem;
+    }
+
+    .egg-emojis span {
+      display: inline-block;
+      animation: bounce 0.8s infinite alternate;
+    }
+
+    .egg-emojis span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .egg-emojis span:nth-child(3) {
+      animation-delay: 0.30s;
+    }
+
+    .egg-emojis span:nth-child(4) {
+      animation-delay: 0.45s;
+    }
+
+    .egg-emojis span:nth-child(5) {
+      animation-delay: 0.60s;
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0) rotate(-5deg);
+      }
+
+      to {
+        transform: translateY(-18px) rotate(5deg);
+      }
+    }
+
+    .egg-spin {
+      font-size: 5rem;
+      animation: spin 3s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .btn-back-start {
+      background: var(--green-accent);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      padding: 16px 40px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-back-start:hover {
+      background: var(--green-dark);
+      transform: scale(1.04);
+    }
+
+    /* ── Categories Page ── */
+    .categories-page {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .search-bar-wrapper {
+      width: 100%;
+    }
+
+    #search-bar {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 50px;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--white);
+    }
+
+    #search-bar:focus {
+      border-color: var(--green-accent);
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 220px));
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .category-card {
+      background: var(--white);
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .category-card:hover:not(.category-card--unavailable) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+    }
+
+    .category-card--unavailable {
+      cursor: default;
+    }
+
+    .category-card__image {
+      height: 100px;
+      width: 100%;
+    }
+
+    .category-card__body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+    }
+
+    .category-card__name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .category-card__arrow {
+      font-size: 1.1rem;
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    .coming-soon-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+    }
+
+    .coming-soon-badge {
+      background: var(--green-dark);
+      color: var(--white);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 50px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Search Results ── */
+    .search-no-results {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      padding: 48px 0;
+      width: 100%;
+    }
+
+    /* ── Vending Grid ── */
+    .vending-grid-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .vending-grid-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .vending-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 120px));
+      justify-content: center;
+      gap: 6px;
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .vending-slot {
+      border-radius: 8px;
+      width: 100%;
+      height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 6px;
+      cursor: default;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .vending-slot.occupied {
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    }
+
+    .vending-slot.occupied:hover {
+      transform: scale(1.04);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .slot-image {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+    }
+
+    .slot-info {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 4px;
+      padding: 3px 5px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .slot-name {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .slot-price {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .vending-slot.empty {
+      background: #e8e8e8;
+      border: 2px dashed #ccc;
+    }
+
+    /* ── Card Grid ── */
+    .card-grid-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .card-grid-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 220px));
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .item-card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+    }
+
+    .card-image {
+      height: 120px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .card-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-price {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .card-calories {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .card-protein {
+      display: inline-block;
+      background: #E8F5E9;
+      color: var(--green-dark);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 50px;
+      margin-top: 2px;
+      align-self: flex-start;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 12px 10px;
+    }
+
+    .add-btn {
+      background: var(--green-accent);
+      color: var(--white);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    /* ── Item Detail Page ── */
+    #item-detail-main {
+      display: flex;
+      justify-content: center;
+    }
+
+    .item-detail-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .item-detail-back-btn {
+      background: var(--green-accent);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      align-self: flex-start;
+      margin-bottom: 16px;
+      transition: background 0.15s;
+    }
+
+    .item-detail-back-btn:hover {
+      background: var(--green-dark);
+    }
+
+    .item-detail-image {
+      width: 100%;
+      height: 240px;
+      border-radius: 14px;
+      flex-shrink: 0;
+    }
+
+    .item-detail-body {
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-detail-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .item-detail-price {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .item-detail-calories {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .item-detail-protein {
+      display: inline-block;
+      background: #E8F5E9;
+      color: var(--green-dark);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 50px;
+      align-self: flex-start;
+    }
+
+    .item-detail-ingredients {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+
+    .item-detail-ingredients strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .item-detail-not-found {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 64px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    /* ── Responsive: Mobile ≤ 430px ── */
+    @media (max-width: 430px) {
+
+      /* Sidebar stays on the left, just narrower */
+      #sidebar {
+        width: 56px;
+        padding: 8px 0;
+        gap: 4px;
+      }
+
+      .sidebar-categories {
+        gap: 4px;
+      }
+
+      .sidebar-item {
+        width: 48px;
+        font-size: 0.5rem;
+        padding: 6px 2px;
+      }
+
+      .sidebar-item .icon {
+        font-size: 1.1rem;
+      }
+
+      .main-content {
+        margin-left: 56px;
+        padding: 10px;
+      }
+
+      /* Keep 2-column grids, just smaller cards */
+      .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .category-card__image {
+        height: 70px;
+      }
+
+      .category-card__body {
+        padding: 8px 10px;
+      }
+
+      .category-card__name {
+        font-size: 0.75rem;
+      }
+
+      .card-image {
+        height: 80px;
+      }
+
+      .card-body {
+        padding: 8px;
+        gap: 2px;
+      }
+
+      .card-name {
+        font-size: 0.75rem;
+      }
+
+      .card-price,
+      .card-calories {
+        font-size: 0.7rem;
+      }
+
+      .card-footer {
+        padding: 0 8px 8px;
+      }
+
+      .add-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 1rem;
+      }
+
+      /* Vending grid: reduce slot size */
+      .vending-grid {
+        grid-template-columns: repeat(4, minmax(0, 72px));
+        padding: 6px;
+        gap: 4px;
+      }
+
+      .vending-slot {
+        height: 72px;
+      }
+
+      .slot-name {
+        font-size: 0.45rem;
+      }
+
+      .slot-price {
+        font-size: 0.5rem;
+      }
+
+      /* Item detail */
+      .item-detail-wrapper {
+        max-width: 100%;
+      }
+
+      .item-detail-image {
+        height: 160px;
+      }
+
+      .item-detail-name {
+        font-size: 1.1rem;
+      }
+
+      /* Search bar */
+      #search-bar {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Sidebar (shared, rendered once) ── -->
+  <nav id="sidebar" class="sidebar-hidden">
+    <!-- populated by JS renderSidebar() -->
+  </nav>
+
+  <!-- ── Page: Start ── -->
+  <div id="page-start" class="page">
+    <div class="start-inner">
+
+      <!-- Hero -->
+      <div class="start-hero">
+        <span class="brand-leaf">🥗</span>
+        <div class="brand-name">Farmer Fridge</div>
+        <div class="brand-tagline">Fresh food, anytime.</div>
+      </div>
+
+      <!-- Utensil banner -->
+      <div class="start-banner">
+        🍴 <span>Utensils available</span>
+      </div>
+
+      <!-- CTA buttons -->
+      <div class="start-actions">
+        <button class="btn-start" onclick="showPage('categories')">Tap to Start</button>
+        <button class="btn-rewards">🌿 Earn Rewards</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Page: Easter Egg ── -->
+  <div id="page-easter-egg" class="page">
+    <div class="egg-spin">🥗</div>
+    <div class="egg-emojis">
+      <span>🥦</span>
+      <span>🍋</span>
+      <span>🥕</span>
+      <span>🍓</span>
+      <span>🥑</span>
+    </div>
+    <div class="egg-title">You found the secret fridge!</div>
+    <div class="egg-subtitle">Congrats, you curious human. The veggies are doing a little dance just for you. 🎉</div>
+    <button class="btn-back-start" onclick="showPage('start')">← Back to Start</button>
+  </div>
+
+  <!-- ── Page: Categories ── -->
+  <div id="page-categories" class="page app-layout">
+    <div class="main-content" id="categories-main">
+      <!-- populated by renderCategories() -->
+    </div>
+  </div>
+
+  <!-- ── Page: Options ── -->
+  <div id="page-options" class="page app-layout">
+    <div class="main-content" id="options-main">
+      <!-- populated by renderOptionsPage() -->
+    </div>
+  </div>
+
+  <!-- ── Page: Item Detail ── -->
+  <div id="page-item-detail" class="page app-layout">
+    <div class="main-content" id="item-detail-main">
+      <!-- populated by renderItemDetail() -->
+    </div>
+  </div>
+
+  <script>
+    // ── Data ─────────────────────────────────────────────────────────────────
+    const DATA = {
+      categories: [
+        { id: 'all', name: 'All', icon: '🥗', available: true, gridType: 'vending' },
+        { id: 'best-sellers', name: 'Best Sellers', icon: '⭐', available: true, gridType: 'card' },
+        { id: 'high-protein', name: 'High Protein', icon: '💪', available: true, gridType: 'card' },
+        { id: 'salads', name: 'Salads', icon: '🥬', available: true, gridType: 'card' },
+        { id: 'bowls', name: 'Bowls', icon: '🍲', available: true, gridType: 'card' },
+        { id: 'sandwiches-wraps', name: 'Sandwiches & Wraps', icon: '🥙', available: true, gridType: 'card' },
+        { id: 'breakfast', name: 'Breakfast', icon: '🍳', available: true, gridType: 'card' },
+        { id: 'sides-snacks', name: 'Sides & Snacks', icon: '🥕', available: true, gridType: 'card' },
+      ],
+      items: [
+        // ── All + High Protein ──
+        {
+          id: 'item-001', name: 'Grilled Chicken Bowl', price: 12.99, calories: 480, protein: 42,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Grilled chicken, brown rice, roasted broccoli, lemon tahini dressing',
+          color: '#A5D6A7', row: 1, col: 1
+        },
+        {
+          id: 'item-002', name: 'Turkey & Quinoa Box', price: 11.49, calories: 420, protein: 38,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Sliced turkey, quinoa, cherry tomatoes, spinach, balsamic glaze',
+          color: '#FFCC80', row: 1, col: 3
+        },
+        {
+          id: 'item-003', name: 'Egg White Protein Pack', price: 9.99, calories: 310, protein: 30,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Egg whites, roasted sweet potato, kale, sriracha aioli',
+          color: '#FFF59D', row: 2, col: 2
+        },
+        {
+          id: 'item-004', name: 'Salmon Power Bowl', price: 14.49, calories: 520, protein: 44,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Atlantic salmon, farro, edamame, cucumber, miso ginger dressing',
+          color: '#FFAB91', row: 2, col: 4
+        },
+        {
+          id: 'item-005', name: 'Steak & Veggie Box', price: 13.99, calories: 550, protein: 46,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Sirloin steak strips, roasted peppers, zucchini, chimichurri',
+          color: '#EF9A9A', row: 3, col: 1
+        },
+        {
+          id: 'item-006', name: 'Tuna Protein Plate', price: 10.99, calories: 370, protein: 35,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Albacore tuna, chickpeas, celery, red onion, lemon herb dressing',
+          color: '#80DEEA', row: 3, col: 3
+        },
+        // ── All + Salads ──
+        {
+          id: 'item-007', name: 'Classic Caesar Salad', price: 9.49, calories: 290, protein: 12,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Romaine lettuce, parmesan, croutons, caesar dressing',
+          color: '#C5E1A5', row: 4, col: 1
+        },
+        {
+          id: 'item-008', name: 'Kale & Farro Salad', price: 10.49, calories: 340, protein: 14,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Kale, farro, dried cranberries, pumpkin seeds, apple cider vinaigrette',
+          color: '#A5D6A7', row: 4, col: 3
+        },
+        {
+          id: 'item-009', name: 'Southwest Salad', price: 10.99, calories: 380, protein: 18,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Mixed greens, black beans, corn, avocado, tortilla strips, chipotle ranch',
+          color: '#FFE082', row: 5, col: 2
+        },
+        {
+          id: 'item-010', name: 'Greek Salad Box', price: 9.99, calories: 310, protein: 10,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Cucumber, tomato, kalamata olives, feta cheese, red onion, oregano vinaigrette',
+          color: '#B3E5FC', row: 5, col: 4
+        },
+        {
+          id: 'item-011', name: 'Beet & Goat Cheese Salad', price: 11.49, calories: 330, protein: 11,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Roasted beets, arugula, goat cheese, candied walnuts, honey lemon dressing',
+          color: '#F48FB1', row: 6, col: 1
+        },
+        {
+          id: 'item-012', name: 'Asian Sesame Salad', price: 10.49, calories: 350, protein: 15,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Napa cabbage, shredded carrots, edamame, mandarin oranges, sesame ginger dressing',
+          color: '#FFCC80', row: 6, col: 3
+        },
+        // ── All + High Protein (continued) ──
+        {
+          id: 'item-013', name: 'Chicken & Lentil Box', price: 11.99, calories: 460, protein: 40,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Roasted chicken, green lentils, roasted carrots, harissa yogurt',
+          color: '#CE93D8', row: 7, col: 2
+        },
+        {
+          id: 'item-014', name: 'Shrimp Protein Bowl', price: 13.49, calories: 400, protein: 36,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Grilled shrimp, cauliflower rice, snap peas, avocado, lime cilantro dressing',
+          color: '#80CBC4', row: 7, col: 4
+        },
+        // ── All + Salads (continued) ──
+        {
+          id: 'item-015', name: 'Harvest Grain Salad', price: 10.99, calories: 360, protein: 13,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Wheat berries, roasted butternut squash, dried cherries, pecans, maple dijon dressing',
+          color: '#FFAB91', row: 8, col: 1
+        },
+        {
+          id: 'item-016', name: 'Spinach & Strawberry Salad', price: 9.99, calories: 280, protein: 9,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Baby spinach, strawberries, sliced almonds, red onion, poppy seed dressing',
+          color: '#F8BBD0', row: 8, col: 3
+        },
+        // ── All + High Protein (more) ──
+        {
+          id: 'item-017', name: 'Black Bean Power Bowl', price: 10.49, calories: 430, protein: 22,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Black beans, brown rice, roasted corn, pico de gallo, avocado crema',
+          color: '#BCAAA4', row: 1, col: 2
+        },
+        {
+          id: 'item-018', name: 'Tofu Teriyaki Box', price: 10.99, calories: 390, protein: 24,
+          categoryIds: ['all', 'high-protein'],
+          ingredients: 'Baked tofu, soba noodles, broccoli, shredded carrots, teriyaki glaze',
+          color: '#B0BEC5', row: 2, col: 1
+        },
+        // ── All + Salads (more) ──
+        {
+          id: 'item-019', name: 'Caprese Salad Box', price: 9.49, calories: 260, protein: 10,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Fresh mozzarella, heirloom tomatoes, basil, balsamic reduction, olive oil',
+          color: '#EF9A9A', row: 3, col: 4
+        },
+        {
+          id: 'item-020', name: 'Lemon Herb Chicken Salad', price: 11.49, calories: 410, protein: 34,
+          categoryIds: ['all', 'salads'],
+          ingredients: 'Grilled chicken, mixed greens, cucumber, radish, lemon herb vinaigrette',
+          color: '#C8E6C9', row: 4, col: 2
+        },
+        // ── High Protein only (not in vending grid) ──
+        {
+          id: 'item-021', name: 'Cottage Cheese & Fruit', price: 7.99, calories: 240, protein: 20,
+          categoryIds: ['high-protein'],
+          ingredients: 'Low-fat cottage cheese, pineapple chunks, blueberries, honey drizzle',
+          color: '#FFF9C4', row: null, col: null
+        },
+        {
+          id: 'item-022', name: 'Hard Boiled Egg Pack', price: 5.49, calories: 180, protein: 16,
+          categoryIds: ['high-protein'],
+          ingredients: 'Hard boiled eggs, everything bagel seasoning, hot sauce packet',
+          color: '#FFFDE7', row: null, col: null
+        },
+        // ── Salads only (not in vending grid) ──
+        {
+          id: 'item-023', name: 'Detox Green Salad', price: 9.99, calories: 220, protein: 7,
+          categoryIds: ['salads'],
+          ingredients: 'Cucumber, celery, green apple, avocado, mint, lemon ginger dressing',
+          color: '#DCEDC8', row: null, col: null
+        },
+        {
+          id: 'item-024', name: 'Roasted Veggie Salad', price: 10.49, calories: 300, protein: 8,
+          categoryIds: ['salads'],
+          ingredients: 'Roasted zucchini, bell peppers, red onion, chickpeas, tahini lemon dressing',
+          color: '#FFE0B2', row: null, col: null
+        },
+        // ── Best Sellers ──
+        { id: 'item-025', name: 'Fan Fave Bowl', price: 11.99, calories: 450, protein: 28, categoryIds: ['best-sellers'], ingredients: 'Quinoa, roasted chicken, kale, lemon dressing', color: '#A5D6A7', row: null, col: null },
+        { id: 'item-026', name: 'Classic Protein Box', price: 10.99, calories: 390, protein: 35, categoryIds: ['best-sellers'], ingredients: 'Hard boiled eggs, turkey, cheddar, apple slices', color: '#FFCC80', row: null, col: null },
+        { id: 'item-027', name: 'Green Goddess Salad', price: 9.99, calories: 310, protein: 12, categoryIds: ['best-sellers'], ingredients: 'Kale, avocado, cucumber, pumpkin seeds, green goddess dressing', color: '#C5E1A5', row: null, col: null },
+        { id: 'item-028', name: 'Harvest Grain Bowl', price: 12.49, calories: 480, protein: 22, categoryIds: ['best-sellers'], ingredients: 'Farro, roasted squash, dried cranberries, pecans, maple vinaigrette', color: '#FFAB91', row: null, col: null },
+        // ── Bowls ──
+        { id: 'item-029', name: 'Teriyaki Tofu Bowl', price: 10.99, calories: 420, protein: 20, categoryIds: ['bowls'], ingredients: 'Baked tofu, brown rice, edamame, shredded carrots, teriyaki glaze', color: '#B0BEC5', row: null, col: null },
+        { id: 'item-030', name: 'Chipotle Chicken Bowl', price: 12.49, calories: 510, protein: 38, categoryIds: ['bowls'], ingredients: 'Grilled chicken, cilantro rice, black beans, corn salsa, chipotle crema', color: '#EF9A9A', row: null, col: null },
+        { id: 'item-031', name: 'Mediterranean Bowl', price: 11.49, calories: 440, protein: 18, categoryIds: ['bowls'], ingredients: 'Falafel, hummus, tabbouleh, cucumber, tomato, tzatziki', color: '#B3E5FC', row: null, col: null },
+        { id: 'item-032', name: 'Salmon Poke Bowl', price: 13.99, calories: 490, protein: 36, categoryIds: ['bowls'], ingredients: 'Salmon, sushi rice, avocado, edamame, sesame seeds, ponzu', color: '#FFAB91', row: null, col: null },
+        // ── Sandwiches & Wraps ──
+        { id: 'item-033', name: 'Turkey Avocado Wrap', price: 9.99, calories: 380, protein: 28, categoryIds: ['sandwiches-wraps'], ingredients: 'Turkey, avocado, romaine, tomato, whole wheat wrap', color: '#C8E6C9', row: null, col: null },
+        { id: 'item-034', name: 'Caprese Sandwich', price: 8.99, calories: 340, protein: 14, categoryIds: ['sandwiches-wraps'], ingredients: 'Fresh mozzarella, tomato, basil, balsamic glaze, ciabatta', color: '#F48FB1', row: null, col: null },
+        { id: 'item-035', name: 'Chicken Caesar Wrap', price: 10.49, calories: 420, protein: 32, categoryIds: ['sandwiches-wraps'], ingredients: 'Grilled chicken, romaine, parmesan, caesar dressing, flour tortilla', color: '#FFF59D', row: null, col: null },
+        { id: 'item-036', name: 'Veggie Hummus Wrap', price: 8.49, calories: 310, protein: 12, categoryIds: ['sandwiches-wraps'], ingredients: 'Hummus, roasted peppers, cucumber, spinach, whole wheat wrap', color: '#80DEEA', row: null, col: null },
+        // ── Breakfast ──
+        { id: 'item-037', name: 'Egg & Veggie Box', price: 8.99, calories: 290, protein: 18, categoryIds: ['breakfast'], ingredients: 'Scrambled eggs, roasted sweet potato, spinach, salsa', color: '#FFE082', row: null, col: null },
+        { id: 'item-038', name: 'Overnight Oats', price: 6.99, calories: 340, protein: 12, categoryIds: ['breakfast'], ingredients: 'Rolled oats, almond milk, chia seeds, blueberries, honey', color: '#CE93D8', row: null, col: null },
+        { id: 'item-039', name: 'Avocado Toast Box', price: 9.49, calories: 380, protein: 14, categoryIds: ['breakfast'], ingredients: 'Multigrain toast, avocado, everything bagel seasoning, cherry tomatoes', color: '#A5D6A7', row: null, col: null },
+        { id: 'item-040', name: 'Greek Yogurt Parfait', price: 7.49, calories: 260, protein: 16, categoryIds: ['breakfast'], ingredients: 'Greek yogurt, granola, strawberries, honey', color: '#F8BBD0', row: null, col: null },
+        // ── Sides & Snacks ──
+        { id: 'item-041', name: 'Fruit & Cheese Box', price: 6.99, calories: 220, protein: 8, categoryIds: ['sides-snacks'], ingredients: 'Cheddar, grapes, apple slices, almonds', color: '#FFCC80', row: null, col: null },
+        { id: 'item-042', name: 'Veggie & Hummus', price: 5.99, calories: 180, protein: 6, categoryIds: ['sides-snacks'], ingredients: 'Carrots, celery, cucumber, red pepper, hummus', color: '#C5E1A5', row: null, col: null },
+        { id: 'item-043', name: 'Mixed Nuts Pack', price: 4.99, calories: 200, protein: 6, categoryIds: ['sides-snacks'], ingredients: 'Almonds, cashews, walnuts, dried cranberries', color: '#BCAAA4', row: null, col: null },
+        { id: 'item-044', name: 'Dark Chocolate Bites', price: 4.49, calories: 160, protein: 2, categoryIds: ['sides-snacks'], ingredients: 'Dark chocolate, sea salt, almonds', color: '#80CBC4', row: null, col: null },
+      ]
+    };
+
+    // ── Navigation state ──────────────────────────────────────────────────────
+    let currentPage = null;
+    let currentContext = {};
+
+    /**
+     * renderSidebar(activeCategoryId = null)
+     * Populates <nav id="sidebar"> with 8 category icon buttons from DATA.categories.
+     * Active category gets .active CSS class. Available categories navigate to Options;
+     * unavailable ones are no-ops (disabled attribute).
+     *
+     * @param {string|null} activeCategoryId - the category id to mark as active, or null
+     */
+    function renderSidebar(activeCategoryId = null) {
+      const sidebar = document.getElementById('sidebar');
+      const categoryButtons = DATA.categories.map(cat => {
+        const isActive = cat.id === activeCategoryId;
+        const isAvailable = cat.available;
+        return `<button
+          class="sidebar-item${isActive ? ' active' : ''}"
+          data-category="${cat.id}"
+          ${isAvailable ? '' : 'disabled'}
+          aria-label="${cat.name}"
+        >
+          <span class="icon">${cat.icon}</span>
+          <span class="label">${cat.name}</span>
+        </button>`;
+      }).join('');
+
+      // Exit button pinned to bottom
+      const exitButton = `<button class="sidebar-item sidebar-exit" id="sidebar-exit-btn" aria-label="Exit to Start">
+        <span class="icon">🚪</span>
+        <span class="label">Exit</span>
+      </button>`;
+
+      sidebar.innerHTML = `<div class="sidebar-categories">${categoryButtons}</div>${exitButton}`;
+
+      // Wire click handlers for available categories
+      sidebar.querySelectorAll('.sidebar-item:not([disabled]):not(.sidebar-exit)').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const categoryId = btn.dataset.category;
+          showPage('options', { categoryId });
+        });
+      });
+
+      // Wire exit button
+      document.getElementById('sidebar-exit-btn').addEventListener('click', () => {
+        showPage('start');
+      });
+    }
+
+    /**
+     * showPage(pageId, context = {})
+     * Hides all .page elements, shows the target page, updates sidebar state.
+     *
+     * @param {string} pageId  - one of: 'start' | 'easter-egg' | 'categories' | 'options' | 'item-detail'
+     * @param {object} context - optional context (e.g. { categoryId } or { itemId, fromCategoryId })
+     */
+    function showPage(pageId, context = {}) {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(p => { p.style.display = 'none'; });
+
+      // Show target page
+      const target = document.getElementById('page-' + pageId);
+      if (target) {
+        target.style.display = 'flex';
+      }
+
+      // Store state
+      currentPage = pageId;
+      currentContext = context;
+
+      // Sidebar visibility
+      const sidebar = document.getElementById('sidebar');
+      const hideSidebar = pageId === 'start' || pageId === 'easter-egg';
+      sidebar.classList.toggle('sidebar-hidden', hideSidebar);
+
+      // Determine active category for sidebar
+      let activeCategoryId = null;
+      if (pageId === 'options') {
+        activeCategoryId = context.categoryId || null;
+      } else if (pageId === 'item-detail') {
+        activeCategoryId = context.fromCategoryId || null;
+      }
+      // categories page: no active category (null)
+
+      // Render sidebar with updated active state
+      renderSidebar(activeCategoryId);
+
+      // Page-specific render calls
+      if (pageId === 'categories') {
+        renderCategories();
+      } else if (pageId === 'options') {
+        renderOptionsPage(context.categoryId);
+      } else if (pageId === 'item-detail') {
+        renderItemDetail(context.itemId, context.fromCategoryId);
+      }
+    }
+
+    // ── Categories Page ──────────────────────────────────────────────────────
+
+    // Category placeholder colors (fallback if item color not available)
+    const CATEGORY_COLORS = {
+      'all': 'linear-gradient(135deg, #A5D6A7, #4CAF50)',
+      'high-protein': 'linear-gradient(135deg, #FFCC80, #FF9800)',
+      'salads': 'linear-gradient(135deg, #C5E1A5, #8BC34A)',
+      'best-sellers': 'linear-gradient(135deg, #FFF59D, #FFEB3B)',
+      'bowls': 'linear-gradient(135deg, #FFAB91, #FF5722)',
+      'sandwiches-wraps': 'linear-gradient(135deg, #BCAAA4, #795548)',
+      'breakfast': 'linear-gradient(135deg, #F8BBD0, #E91E63)',
+      'sides-snacks': 'linear-gradient(135deg, #B3E5FC, #03A9F4)',
+    };
+
+    /**
+     * renderCategories(filter = '')
+     * Renders the categories page content into #categories-main.
+     * Includes a search bar at the top and an 8-card 2-column grid below.
+     * Available categories navigate to Options; unavailable show "Coming Soon".
+     *
+     * @param {string} filter - optional search filter (unused in card render, handled by searchItems)
+     */
+    function renderCategories(filter = '') {
+      const main = document.getElementById('categories-main');
+      if (!main) return;
+
+      // Build search bar HTML (always include it — it's part of the page structure)
+      const searchHTML = `<div class="search-bar-wrapper">
+          <input id="search-bar" type="search" placeholder="🔍  Search items..." aria-label="Search items" />
+        </div>`;
+
+      // Build category cards
+      const cardsHTML = DATA.categories.map(cat => {
+        const bg = CATEGORY_COLORS[cat.id] || '#E0E0E0';
+
+        return `<div
+          class="category-card"
+          onclick="showPage('options', { categoryId: '${cat.id}' })"
+          role="button"
+          aria-label="Browse ${cat.name}"
+        >
+          <div class="category-card__image" style="background: ${bg}; display:flex; align-items:center; justify-content:center; font-size:2.4rem;">
+            ${cat.icon}
+          </div>
+          <div class="category-card__body">
+            <span class="category-card__name">${cat.name}</span>
+            <span class="category-card__arrow">→</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      main.innerHTML = `
+        <div class="categories-page">
+          ${searchHTML}
+          <div class="categories-grid" id="categories-grid">
+            ${cardsHTML}
+          </div>
+        </div>`;
+
+      // Wire search bar event
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar) {
+        searchBar.addEventListener('input', e => {
+          const q = e.target.value.trim();
+          if (q) {
+            searchItems(q);
+          } else {
+            renderCategories();
+          }
+        });
+      }
+    }
+
+    // ── Search ───────────────────────────────────────────────────────────────
+
+    /**
+     * searchItems(query)
+     * Flattens all items from DATA.items, filters by item.name or item.ingredients
+     * (case-insensitive substring match), and renders matching items as Item_Cards
+     * in the categories main area. Preserves the search bar and restores focus.
+     *
+     * @param {string} query
+     */
+    function searchItems(query) {
+      const q = query.toLowerCase();
+      const matches = DATA.items.filter(item =>
+        item.name.toLowerCase().includes(q) ||
+        item.ingredients.toLowerCase().includes(q)
+      );
+
+      const main = document.getElementById('categories-main');
+      if (!main) return;
+
+      // Preserve search bar
+      const searchBarHTML = `<div class="search-bar-wrapper">
+        <input id="search-bar" type="search" placeholder="🔍  Search items..." aria-label="Search items" value="${query.replace(/"/g, '&quot;')}" />
+      </div>`;
+
+      if (matches.length === 0) {
+        main.innerHTML = `<div class="categories-page">${searchBarHTML}<div class="search-no-results">No results found</div></div>`;
+      } else {
+        const cardsHTML = matches.map(item => `
+          <div class="item-card card" style="cursor:pointer;padding:0;overflow:hidden;" onclick="showPage('item-detail',{itemId:'${item.id}',fromCategoryId:'all'})">
+            <div style="height:80px;background:${item.color};border-radius:4px 4px 0 0;"></div>
+            <div style="padding:10px 12px;">
+              <div style="font-weight:600;font-size:0.9rem;">${item.name}</div>
+              <div style="color:var(--text-muted);font-size:0.8rem;">$${item.price.toFixed(2)} · ${item.calories} cal</div>
+            </div>
+          </div>`).join('');
+        main.innerHTML = `<div class="categories-page">${searchBarHTML}<div class="categories-grid">${cardsHTML}</div></div>`;
+      }
+
+      // Re-wire search bar
+      const searchBar = document.getElementById('search-bar');
+      if (searchBar) {
+        searchBar.focus();
+        searchBar.setSelectionRange(query.length, query.length);
+        searchBar.addEventListener('input', e => {
+          const q2 = e.target.value.trim();
+          if (q2) searchItems(q2);
+          else renderCategories();
+        });
+      }
+    }
+
+    // ── Vending Grid ─────────────────────────────────────────────────────────
+
+    /**
+     * buildVendingGrid(items)
+     * Creates an 8×4 2D array (rows × cols) filled with null, then places each
+     * item that has a valid row/col into the corresponding cell (1-indexed).
+     *
+     * @param {Array} items - array of item objects (may be empty)
+     * @returns {Array} 8-element array, each element a 4-element array of item|null
+     */
+    function buildVendingGrid(items) {
+      const grid = Array.from({ length: 8 }, () => Array(4).fill(null));
+      items
+        .filter(i => i.row != null && i.col != null)
+        .forEach(i => { grid[i.row - 1][i.col - 1] = i; });
+      return grid;
+    }
+
+    /**
+     * renderVendingGrid()
+     * Filters DATA.items to those with 'all' in categoryIds, builds the 8×4 grid,
+     * then renders it into #options-main as a .vending-grid with 32 cells.
+     * Occupied slots show a colored placeholder, item name, and price.
+     * Empty slots show a dashed-border empty style.
+     */
+    function renderVendingGrid() {
+      const main = document.getElementById('options-main');
+      if (!main) return;
+
+      const allItems = DATA.items.filter(item => item.categoryIds.includes('all'));
+      const grid = buildVendingGrid(allItems);
+
+      const cellsHTML = grid.flat().map(item => {
+        if (item) {
+          const price = '$' + item.price.toFixed(2);
+          return `<div
+            class="vending-slot occupied"
+            data-item-id="${item.id}"
+            role="button"
+            aria-label="${item.name} ${price}"
+            onclick="showPage('item-detail', { itemId: '${item.id}', fromCategoryId: 'all' })"
+          >
+            <div class="slot-image" style="background:${item.color};"></div>
+            <div class="slot-info">
+              <div class="slot-name">${item.name}</div>
+              <div class="slot-price">${price}</div>
+            </div>
+          </div>`;
+        } else {
+          return `<div class="vending-slot empty" aria-hidden="true"></div>`;
+        }
+      }).join('');
+
+      const cat = DATA.categories.find(c => c.id === 'all');
+      const catName = cat ? cat.name : 'All';
+
+      main.innerHTML = `
+        <div class="vending-grid-wrapper">
+          <div class="vending-grid-title">${catName}</div>
+          <div class="vending-grid">${cellsHTML}</div>
+        </div>`;
+    }
+
+    /**
+     * renderCardGrid(categoryId)
+     * Filters DATA.items by categoryId, then renders a 2-column card grid
+     * into #options-main. Each card shows a colored image placeholder, name,
+     * price, calorie count, and a decorative "+" button. For the 'high-protein'
+     * category, a protein gram count badge is also shown on each card.
+     * Clicking a card navigates to the item detail page.
+     *
+     * @param {string} categoryId
+     */
+    function renderCardGrid(categoryId) {
+      const main = document.getElementById('options-main');
+      if (!main) return;
+
+      const items = DATA.items.filter(item => item.categoryIds.includes(categoryId));
+      const isHighProtein = categoryId === 'high-protein';
+      const cat = DATA.categories.find(c => c.id === categoryId);
+      const catName = cat ? cat.name : categoryId;
+
+      const cardsHTML = items.map(item => {
+        const price = '$' + item.price.toFixed(2);
+        const proteinBadge = isHighProtein
+          ? `<span class="card-protein">${item.protein}g protein</span>`
+          : '';
+
+        return `<div
+          class="item-card"
+          data-item-id="${item.id}"
+          role="button"
+          aria-label="${item.name}, ${price}, ${item.calories} cal"
+          onclick="showPage('item-detail', { itemId: '${item.id}', fromCategoryId: '${categoryId}' })"
+        >
+          <div class="card-image" style="background:${item.color};"></div>
+          <div class="card-body">
+            <div class="card-name">${item.name}</div>
+            <div class="card-meta">
+              <span class="card-price">${price}</span>
+              <span class="card-calories">${item.calories} cal</span>
+            </div>
+            ${proteinBadge}
+          </div>
+          <div class="card-footer">
+            <button class="add-btn" aria-hidden="true" tabindex="-1">+</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      main.innerHTML = `
+        <div class="card-grid-wrapper">
+          <div class="card-grid-title">${catName}</div>
+          <div class="card-grid">${cardsHTML}</div>
+        </div>`;
+    }
+
+    /**
+     * renderItemDetail(itemId, fromCategoryId)
+     * Looks up item in DATA.items by itemId. If not found, shows a fallback
+     * "Item not found" message with a back button to categories.
+     * Otherwise populates #item-detail-main with: back button, large colored
+     * image placeholder, item name, price, calorie count, optional protein badge,
+     * and full ingredients list.
+     *
+     * @param {string} itemId
+     * @param {string} fromCategoryId
+     */
+    function renderItemDetail(itemId, fromCategoryId) {
+      const main = document.getElementById('item-detail-main');
+      if (!main) return;
+
+      const item = DATA.items.find(i => i.id === itemId);
+
+      if (!item) {
+        main.innerHTML = `
+          <div class="item-detail-not-found">
+            <div style="font-size:2.5rem;">🥗</div>
+            <div style="font-size:1.1rem;font-weight:600;color:var(--text);">Item not found</div>
+            <div>This item doesn't seem to exist.</div>
+            <button class="item-detail-back-btn" onclick="showPage('categories')">← Back to Categories</button>
+          </div>`;
+        return;
+      }
+
+      const price = '$' + item.price.toFixed(2);
+      const proteinBadge = item.protein !== undefined
+        ? `<span class="item-detail-protein">${item.protein}g protein</span>`
+        : '';
+
+      main.innerHTML = `
+        <div class="item-detail-wrapper">
+          <button class="item-detail-back-btn" onclick="showPage('options', { categoryId: '${fromCategoryId}' })">← Back</button>
+          <div class="item-detail-image" style="background:${item.color};"></div>
+          <div class="item-detail-body">
+            <div class="item-detail-name">${item.name}</div>
+            <div class="item-detail-price">${price}</div>
+            <div class="item-detail-calories">${item.calories} cal</div>
+            ${proteinBadge}
+            <div class="item-detail-ingredients"><strong>Ingredients:</strong> ${item.ingredients}</div>
+          </div>
+        </div>`;
+    }
+
+    /**
+     * renderOptionsPage(categoryId)
+     * Dispatches to the correct renderer based on categoryId.
+     * 'all' → renderVendingGrid(); others → renderCardGrid(categoryId).
+     *
+     * @param {string} categoryId
+     */
+    function renderOptionsPage(categoryId) {
+      if (categoryId === 'all') {
+        renderVendingGrid();
+      } else {
+        renderCardGrid(categoryId);
+      }
+    }
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      showPage('start');
+    });
+  </script>
+</body>
+
+</html>
